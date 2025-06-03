@@ -1,0 +1,19 @@
+FROM python:3.9-slim
+
+WORKDIR /app
+
+# Установка Poetry
+RUN pip install poetry
+
+# Копирование файлов конфигурации
+COPY pyproject.toml poetry.lock ./
+
+# Установка зависимостей
+RUN poetry config virtualenvs.create false \
+    && poetry install --no-dev --no-interaction --no-ansi
+
+# Копирование исходного кода
+COPY . .
+
+# Запуск приложения
+CMD ["poetry", "run", "uvicorn", "smart_code_analyzer.backend.main:app", "--host", "0.0.0.0", "--port", "8000"] 

@@ -1,0 +1,15 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Копирование файлов конфигурации
+COPY package*.json ./
+
+# Установка зависимостей
+RUN npm install
+
+# Копирование исходного кода
+COPY . .
+
+# Запуск приложения
+CMD ["npm", "start"] 

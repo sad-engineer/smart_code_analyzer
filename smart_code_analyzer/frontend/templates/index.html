@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Code Analyzer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-6">
+            <h1 class="text-2xl font-bold text-gray-800 mb-6">Анализ кода</h1>
+            
+            <!-- Одна зона загрузки -->
+            <form id="uploadForm" class="space-y-4">
+                <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                    <input type="file" id="codeInput" multiple webkitdirectory directory 
+                           class="hidden" onchange="handleInputChange(this)">
+                    <label for="codeInput" class="cursor-pointer">
+                        <div class="text-gray-600">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                            <p class="mt-1">Нажмите для выбора файла или папки, либо перетащите их сюда</p>
+                            <p class="text-sm text-gray-500">Поддерживаемые форматы: .py </p>
+                        </div>
+                    </label>
+                </div>
+                <div id="fileList" class="text-sm text-gray-600 space-y-2"></div>
+                <button type="submit" 
+                        class="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors">
+                    Анализировать код
+                </button>
+            </form>
+
+            <!-- Результаты анализа -->
+            <div id="results" class="mt-6 hidden">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Результаты анализа</h2>
+                <div id="analysisResults" class="bg-gray-50 rounded-lg p-4 space-y-4">
+                    <!-- Здесь будут результаты -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedFiles = [];
+        const allowedExts = ['.py'];
+
+        function addFiles(files) {
+            files.forEach(file => {
+                console.log('Добавляется файл:', file.name, file.webkitRelativePath, file);
+                // Если есть относительный путь — сравниваем только по нему
+                if (file.webkitRelativePath) {
+                    if (!selectedFiles.some(f => f.webkitRelativePath === file.webkitRelativePath)) {
+                        selectedFiles.push(file);
+                    }
+                } else {
+                    // Если относительного пути нет — сравниваем по имени
+                    if (!selectedFiles.some(f => !f.webkitRelativePath && f.name === file.name)) {
+                        selectedFiles.push(file);
+                    }
+                }
+            });
+        }
+
+        function updateFileList() {
+            const fileList = document.getElementById('fileList');
+            fileList.innerHTML = '';
+            selectedFiles.forEach((file, idx) => {
+                // Показываем относительный путь, если он есть, иначе имя
+                const displayPath = (file.webkitRelativePath || file.fullPath || file.name).replace(/^\/+/, '');
+                const div = document.createElement('div');
+                div.className = 'flex items-center justify-between bg-gray-50 p-2 rounded';
+                div.innerHTML = `
+                    <span class="text-gray-700">${displayPath}</span>
+                    <button type="button" data-idx="${idx}" class="text-red-500 hover:text-red-700">✕</button>
+                `;
+                fileList.appendChild(div);
+            });
+            fileList.querySelectorAll('button[data-idx]').forEach(btn => {
+                btn.onclick = function() {
+                    const idx = parseInt(this.getAttribute('data-idx'));
+                    selectedFiles.splice(idx, 1);
+                    updateFileList();
+                };
+            });
+        }
+
+        function handleInputChange(input) {
+            const files = Array.from(input.files).filter(file => {
+                const ext = file.name.split('.').pop().toLowerCase();
+                return allowedExts.includes('.' + ext);
+            });
+            addFiles(files);
+            updateFileList();
+        }
+
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (selectedFiles.length === 0) {
+                alert('Пожалуйста, выберите файл или папку');
+                return;
+            }
+            const formData = new FormData();
+            selectedFiles.forEach(file => {
+                formData.append('files', file);
+            });
+            try {
+                const response = await fetch('/analyzer/analyze', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                document.getElementById('results').classList.remove('hidden');
+                const resultsDiv = document.getElementById('analysisResults');
+                resultsDiv.innerHTML = '';
+                if (Array.isArray(data)) {
+                    data.forEach(result => {
+                        if (result && result.analysis) {
+                            resultsDiv.innerHTML += `
+                                <div class="border-b border-gray-200 pb-4">
+                                    <p class="font-medium text-gray-700">Файл: ${result.filename}</p>
+                                    <p class="text-gray-600">Статус: ${result.analysis.status}</p>
+                                    <p class="text-gray-600">Сообщение: ${result.analysis.message}</p>
+                                </div>
+                            `;
+                        } else {
+                            resultsDiv.innerHTML += `
+                                <div class="border-b border-gray-200 pb-4">
+                                    <p class="font-medium text-gray-700">Ошибка: ${JSON.stringify(result)}</p>
+                                </div>
+                            `;
+                        }
+                    });
+                } else if (data && data.analysis) {
+                    resultsDiv.innerHTML = `
+                        <p class="text-gray-700">Файл: ${data.filename}</p>
+                        <p class="text-gray-700">Статус: ${data.analysis.status}</p>
+                        <p class="text-gray-700">Сообщение: ${data.analysis.message}</p>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <p class="text-red-700">Ошибка: ${JSON.stringify(data)}</p>
+                    `;
+                }
+            } catch (error) {
+                console.error('Ошибка:', error);
+                alert('Произошла ошибка при анализе файлов');
+            }
+        });
+
+        // Drag and drop для одной зоны
+        const dropZone = document.querySelector('.border-dashed');
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => highlight(dropZone), false);
+        });
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => unhighlight(dropZone), false);
+        });
+        dropZone.addEventListener('drop', async (e) => handleDrop(e), false);
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        function highlight(element) {
+            element.classList.add('border-blue-500');
+        }
+        function unhighlight(element) {
+            element.classList.remove('border-blue-500');
+        }
+        async function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const items = dt.items;
+            if (items && items.length > 0 && items[0].webkitGetAsEntry) {
+                const entries = [];
+                for (let i = 0; i < items.length; i++) {
+                    const entry = items[i].webkitGetAsEntry();
+                    if (entry) entries.push(entry);
+                }
+                const files = await getFilesFromEntries(entries);
+                addFiles(files);
+                updateFileList();
+            } else {
+                const files = Array.from(dt.files).filter(file => {
+                    const ext = file.name.split('.').pop().toLowerCase();
+                    return allowedExts.includes('.' + ext);
+                });
+                addFiles(files);
+                updateFileList();
+            }
+        }
+
+        async function getFilesFromEntries(entries) {
+            let files = [];
+            for (const entry of entries) {
+                if (entry.isFile) {
+                    files.push(await getFileFromEntry(entry));
+                } else if (entry.isDirectory) {
+                    files = files.concat(await readAllFilesFromDirectory(entry));
+                }
+            }
+            return files.filter(file => {
+                const ext = file.name.split('.').pop().toLowerCase();
+                return allowedExts.includes('.' + ext);
+            });
+        }
+
+        function getFileFromEntry(entry) {
+            return new Promise(resolve => {
+                entry.file(file => {
+                    file.webkitRelativePath = entry.fullPath;
+                    resolve(file);
+                });
+            });
+        }
+
+        function readAllFilesFromDirectory(directoryEntry) {
+            return new Promise(resolve => {
+                const dirReader = directoryEntry.createReader();
+                let entries = [];
+                function readEntries() {
+                    dirReader.readEntries(async results => {
+                        if (!results.length) {
+                            const files = await getFilesFromEntries(entries);
+                            resolve(files);
+                        } else {
+                            entries = entries.concat(Array.from(results));
+                            readEntries();
+                        }
+                    });
+                }
+                readEntries();
+            });
+        }
+    </script>
+</body>
+</html> 

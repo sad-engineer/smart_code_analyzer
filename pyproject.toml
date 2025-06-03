@@ -1,0 +1,69 @@
+[tool.poetry]
+name = "smart-code-analyzer"
+version = "0.0.1"
+description = "Умный анализатор кода"
+authors = ["Andrey Korenyk <korenyuk.a.n@mail.ru>"]
+readme = "README.md"
+packages = [{include = "smart_code_analyzer"}]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+code-analizer = {git = "https://github.com/sad-engineer/code_analizer.git"}
+fastapi = "^0.109.0"
+uvicorn = "^0.27.0"
+pydantic = "^2.6.0"
+python-multipart = "^0.0.9"
+python-jose = {extras = ["cryptography"], version = "^3.3.0"}
+passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+sqlalchemy = "^2.0.25"
+alembic = "^1.13.1"
+psycopg2-binary = "^2.9.9"
+python-dotenv = "^1.0.0"
+jinja2 = "^3.1.3"
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.1.1"
+isort = "^5.13.2"
+flake8 = "^7.0.0"
+mypy = "^1.8.0"
+
+[tool.black]
+line-length = 120
+target-version = ['py39']
+include = '\.pyi?$'
+skip-string-normalization = true
+extend-exclude = '''
+/(
+    \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 120
+skip = [
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".tox",
+    ".venv",
+    "venv",
+    "env",
+    "_build",
+    "buck-out",
+    "build",
+    "dist"
+]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
