@@ -4,13 +4,10 @@
 from dataclasses import asdict
 from typing import Any, Dict, List
 
+from code_analizer import FileBatchAnalyzer, HtmlFormatter, HtmlSummaryFormatter, LineProcessor
 from fastapi import APIRouter, File, UploadFile
 
 router = APIRouter(prefix="/analyzer", tags=["analyzer"])
-
-from code_analizer import FileBatchAnalyzer
-from code_analizer import HtmlFormatter, HtmlSummaryFormatter
-from code_analizer import LineProcessor
 
 batch_analyzer = FileBatchAnalyzer(LineProcessor)
 
