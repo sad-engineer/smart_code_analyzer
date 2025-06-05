@@ -266,7 +266,7 @@ colorama = {version = "*", markers = "platform_system == \"Windows\""}
 
 [[package]]
 name = "code-analizer"
-version = "0.0.17"
+version = "0.0.21"
 description = "Пакет Python для анализа кода проекта"
 optional = false
 python-versions = "^3.9"
@@ -282,7 +282,7 @@ pyyaml = "^6.0.2"
 type = "git"
 url = "https://github.com/sad-engineer/code_analizer.git"
 reference = "HEAD"
-resolved_reference = "d5f797aeb13de71a65c1f425e6b0892b2705f311"
+resolved_reference = "d449d23298b139f9308b90590ab7f974150a03d7"
 
 [[package]]
 name = "colorama"
@@ -1420,4 +1420,4 @@ standard = ["colorama (>=0.4)", "httptools (>=0.5.0)", "python-dotenv (>=0.13)",
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.9"
-content-hash = "045decbdd9f6922b2a42feb8808cf062509bb89828565decc28d840afcca9d11"
+content-hash = "eac0f1481fd57bc65676a0e359715f86c7f6d7d27f1c7365b63374197b2265b0"

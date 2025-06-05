@@ -50,3 +50,7 @@ async def read_root(request: Request):
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+
+
+#     poetry run uvicorn smart_code_analyzer.backend.main:app --reload --host 0.0.0.0 --port 8000
+#       http://localhost:8000
