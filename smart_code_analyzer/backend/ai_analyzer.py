@@ -197,7 +197,8 @@ class AIAnalyzer:
     def _parse_style_analysis(response: str) -> Dict[str, str]:
         """Парсинг анализа стиля кода"""
         try:
-            return json.loads(response)
+            cleaned = AIAnalyzer._clean_json_markdown(response)
+            return json.loads(cleaned)
         except json.JSONDecodeError:
             return {
                 "formatting": "Ошибка парсинга ответа",
@@ -210,15 +211,8 @@ class AIAnalyzer:
     def _parse_solid_analysis(response: str) -> Dict[str, str]:
         """Парсинг анализа SOLID принципов"""
         try:
-            # Очищаем ответ от возможных лишних символов
-            cleaned_response = response.strip()
-            if cleaned_response.startswith('```json'):
-                cleaned_response = cleaned_response[7:]
-            if cleaned_response.endswith('```'):
-                cleaned_response = cleaned_response[:-3]
-            cleaned_response = cleaned_response.strip()
-
-            result = json.loads(cleaned_response)
+            cleaned = AIAnalyzer._clean_json_markdown(response)
+            result = json.loads(cleaned)
 
             # Проверяем наличие всех необходимых ключей
             required_keys = ["SRP", "OCP", "LSP", "ISP", "DIP"]
@@ -242,15 +236,8 @@ class AIAnalyzer:
     def _parse_issues(response: str) -> List[Dict[str, str]]:
         """Парсинг найденных проблем"""
         try:
-            # Очищаем ответ от возможных лишних символов
-            cleaned_response = response.strip()
-            if cleaned_response.startswith('```json'):
-                cleaned_response = cleaned_response[7:]
-            if cleaned_response.endswith('```'):
-                cleaned_response = cleaned_response[:-3]
-            cleaned_response = cleaned_response.strip()
-
-            issues = json.loads(cleaned_response)
+            cleaned = AIAnalyzer._clean_json_markdown(response)
+            issues = json.loads(cleaned)
 
             # Проверяем структуру каждой проблемы
             valid_issues = []
@@ -282,15 +269,8 @@ class AIAnalyzer:
     def _parse_recommendations(response: str) -> List[str]:
         """Парсинг рекомендаций"""
         try:
-            # Очищаем ответ от возможных лишних символов
-            cleaned_response = response.strip()
-            if cleaned_response.startswith('```json'):
-                cleaned_response = cleaned_response[7:]
-            if cleaned_response.endswith('```'):
-                cleaned_response = cleaned_response[:-3]
-            cleaned_response = cleaned_response.strip()
-
-            recommendations = json.loads(cleaned_response)
+            cleaned = AIAnalyzer._clean_json_markdown(response)
+            recommendations = json.loads(cleaned)
 
             # Проверяем, что это список строк
             if isinstance(recommendations, list):
@@ -371,3 +351,51 @@ class AIAnalyzer:
             )
         except Exception as e:
             raise RuntimeError(f"Ошибка при анализе кода файла {filename}: {str(e)}")
+
+    async def analyze_package_structure(self, files: List[dict]) -> dict:
+        """
+        Анализирует структуру пакета (проекта) с помощью ИИ.
+        Args:
+            files: Список словарей вида {"filename": ...}
+        Returns:
+            dict: Рекомендации и замечания по архитектуре и организации пакета
+        """
+        # Формируем краткое описание структуры
+        file_list = "\n".join(f"- {f['filename']}" for f in files)
+        prompt = f"""
+        Ты — эксперт по архитектуре Python-проектов. Проанализируй структуру Python-пакета, состоящего из следующих 
+        файлов и директорий:
+        {file_list}
+
+        Не анализируй содержимое файлов, оценивай только по структуре и именам. 
+        Ответь строго в формате JSON, пример:
+        {{
+            "architecture": "Краткое описание архитектуры и организации модулей.",
+            "module_relations": "Как связаны модули между собой.",
+            "strong_points": "Сильные стороны структуры.",
+            "weak_points": "Слабые стороны структуры.",
+            "recommendations": "Рекомендации по улучшению архитектуры."
+        }}
+
+        Если информации недостаточно, напиши в каждом поле: "Недостаточно данных для анализа".
+
+        """
+
+        response = await self._get_ai_response(prompt)
+        cleaned_response = self._clean_json_markdown(response)
+        try:
+            return json.loads(cleaned_response)
+        except Exception:
+            return {"error": "Ошибка парсинга ответа ИИ", "raw": response}
+
+    @staticmethod
+    def _clean_json_markdown(response: str) -> str:
+        """
+        Удаляет markdown-обёртку ```json ... ``` из ответа, если она есть.
+        """
+        cleaned = response.strip()
+        if cleaned.startswith('```json'):
+            cleaned = cleaned[7:]
+        if cleaned.endswith('```'):
+            cleaned = cleaned[:-3]
+        return cleaned.strip()

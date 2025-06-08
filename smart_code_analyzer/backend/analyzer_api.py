@@ -3,10 +3,10 @@
 # ---------------------------------------------------------------------------------------------------------------------
 import logging
 from dataclasses import asdict
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List
 
-from code_analizer import FileBatchAnalyzer, HtmlFormatter, HtmlSummaryFormatter, LineProcessor, SummaryData
-from fastapi import APIRouter, File, UploadFile
+from code_analizer import FileBatchAnalyzer, HtmlFormatter, HtmlSummaryFormatter, LineProcessor
+from fastapi import APIRouter, Body, File, UploadFile, Request
 
 from smart_code_analyzer.backend.ai_analyzer import AIAnalyzer
 
@@ -21,7 +21,7 @@ logger.setLevel(logging.DEBUG)
 
 
 @router.post("/analyze")
-async def analyze_code(files: List[UploadFile] = File(...)):
+async def analyze_code(request: Request, files: List[UploadFile] = File(...)):
     """
     Анализирует загруженный файл с кодом
     """
@@ -49,8 +49,7 @@ async def analyze_code(files: List[UploadFile] = File(...)):
     }
 
     # Сохраняем результаты для последующего ИИ-анализа
-    global RESULTS_CACHE
-    RESULTS_CACHE = results_analysis
+    request.app.state.results_cache = results_analysis
 
     logger.info(f"Parsing-анализ завершен")
     return results_analysis
@@ -65,14 +64,15 @@ async def get_analysis_status(analysis_id: str) -> Dict[str, Any]:
 
 
 @router.post("/ai-analyze")
-async def ai_analyze_code(file: UploadFile = File(...)):
+async def ai_analyze_code(request: Request, file: UploadFile = File(...)):
     """
     Анализирует файл с помощью ИИ
     """
     filename = file.filename
     logger.info(f"ИИ-анализ для файла: {filename}")
 
-    code = RESULTS_CACHE[filename]['data']['file_content']
+    results_cache = request.app.state.results_cache
+    code = results_cache[filename]['data']['file_content']
 
     if not code:
         logger.error(f"Код для файла {filename} не найден")
@@ -93,3 +93,20 @@ async def ai_analyze_code(file: UploadFile = File(...)):
         "recommendations": result.recommendations,
         "overall_score": result.overall_score,
     }
+
+
+@router.post("/ai-analyze-package")
+async def ai_analyze_package(body: dict = Body(...)):
+    """
+    ИИ-анализ структуры пакета (проекта)
+    body: {"files": [{"filename": ..., "content": ...}, ...]}
+    """
+    files = body.get("files", [])
+    logger.info(f"ИИ-анализ структуры пакета {len(files)} файлов")
+    async with AIAnalyzer() as analyzer:
+        result = await analyzer.analyze_package_structure(files)
+        if result:
+            logger.info(f"ИИ-анализ структуры пакета завершен")
+        else:
+            logger.info(f"ИИ-анализ структуры пакета завершен с ошибкой")
+    return result

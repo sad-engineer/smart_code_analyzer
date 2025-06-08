@@ -116,24 +116,23 @@ document.getElementById('uploadForm').addEventListener('submit', async (e) => {
 
                 // Кнопка ИИ-анализа (широкая)
                 const aiBtn = document.createElement('button');
-                aiBtn.textContent = 'ИИ-анализ';
+                aiBtn.textContent = 'ИИ-анализ структуры';
                 aiBtn.className = 'mt-3 px-3 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition block w-full font-semibold';
                 aiBtn.onclick = async () => {
                     aiBtn.disabled = true;
-                    aiBtn.textContent = 'Анализ...';
-                    const file = selectedFiles.find(f => f.name === filename || f.webkitRelativePath === filename);
-                    if (!file) {
-                        alert('Файл не найден для ИИ-анализа');
-                        aiBtn.disabled = false;
-                        aiBtn.textContent = 'ИИ-анализ';
-                        return;
-                    }
-                    const formData = new FormData();
-                    formData.append('file', file);
+                    aiBtn.innerHTML = 'Анализ... <span class="spinner"></span>';
+
+                    // Собираем все файлы для анализа пакета
+                    // selectedFiles — это массив File, нужно получить их содержимое
+                    const filesForPackage = selectedFiles.map(f => ({
+                        filename: f.webkitRelativePath || f.name
+                    }));
+
                     try {
-                        const resp = await fetch('/analyzer/ai-analyze', {
+                        const resp = await fetch('/analyzer/ai-analyze-package', {
                             method: 'POST',
-                            body: formData
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ files: filesForPackage })
                         });
                         const aiData = await resp.json();
                         let aiDiv = details.querySelector('.ai-analysis');
@@ -143,59 +142,19 @@ document.getElementById('uploadForm').addEventListener('submit', async (e) => {
                             details.appendChild(aiDiv);
                         }
                         aiDiv.innerHTML = `
-                            <div class="font-bold text-violet-700 mb-2 text-lg">ИИ-анализ</div>
-                            <div class="mb-2">
-                                <span class="font-semibold text-gray-700">Стиль кода:</span>
-                                <ul class="list-disc pl-6 text-gray-800">
-                                    <li><b>Форматирование:</b> ${aiData.code_style.formatting}</li>
-                                    <li><b>Именование:</b> ${aiData.code_style.naming}</li>
-                                    <li><b>Документация:</b> ${aiData.code_style.documentation}</li>
-                                    <li><b>Структура:</b> ${aiData.code_style.structure}</li>
-                                </ul>
-                            </div>
-                            <div class="mb-2">
-                                <span class="font-semibold text-gray-700">SOLID:</span>
-                                <ul class="list-disc pl-6 text-gray-800">
-                                    <li><b>SRP:</b> ${aiData.solid_principles.SRP}</li>
-                                    <li><b>OCP:</b> ${aiData.solid_principles.OCP}</li>
-                                    <li><b>LSP:</b> ${aiData.solid_principles.LSP}</li>
-                                    <li><b>ISP:</b> ${aiData.solid_principles.ISP}</li>
-                                    <li><b>DIP:</b> ${aiData.solid_principles.DIP}</li>
-                                </ul>
-                            </div>
-                            <div class="mb-2">
-                                <span class="font-semibold text-gray-700">Потенциальные проблемы:</span>
-                                <ul class="list-disc pl-6 text-gray-800">
-                                    ${aiData.potential_issues && aiData.potential_issues.length > 0
-                                        ? aiData.potential_issues.map(issue => `
-                                            <li>
-                                                <b>${issue.type}:</b> ${issue.description}
-                                                <div class="text-gray-600 text-sm ml-2"><b>Рекомендация:</b> ${issue.recommendation}</div>
-                                            </li>
-                                        `).join('')
-                                        : '<li>Не обнаружено</li>'
-                                    }
-                                </ul>
-                            </div>
-                            <div class="mb-2">
-                                <span class="font-semibold text-gray-700">Рекомендации по улучшению:</span>
-                                <ul class="list-disc pl-6 text-gray-800">
-                                    ${aiData.recommendations && aiData.recommendations.length > 0
-                                        ? aiData.recommendations.map(rec => `<li>${rec}</li>`).join('')
-                                        : '<li>Нет рекомендаций</li>'
-                                    }
-                                </ul>
-                            </div>
-                            <div class="mt-2 font-bold text-right">
-                                <span class="text-gray-700">Общая оценка:</span>
-                                <span class="inline-block px-3 py-1 rounded bg-violet-200 text-violet-900 ml-2">${(aiData.overall_score * 100).toFixed(0)} / 100</span>
-                            </div>
+                            <div class="font-bold text-violet-700 mb-2 text-lg">ИИ-анализ структуры пакета</div>
+                            <div class="mb-2"><b>Архитектура:</b> <div>${aiData.architecture || '-'}</div></div>
+                            <div class="mb-2"><b>Связи между модулями:</b> <div>${aiData.module_relations || '-'}</div></div>
+                            <div class="mb-2"><b>Сильные стороны:</b> <div>${aiData.strong_points || '-'}</div></div>
+                            <div class="mb-2"><b>Слабые стороны:</b> <div>${aiData.weak_points || '-'}</div></div>
+                            <div class="mb-2"><b>Рекомендации:</b> <div>${aiData.recommendations || '-'}</div></div>
+                            ${aiData.error ? `<div class="text-red-600">Ошибка: ${aiData.error}</div>` : ''}
                         `;
                     } catch (e) {
-                        alert('Ошибка ИИ-анализа');
+                        alert('Ошибка ИИ-анализа структуры пакета');
                     }
                     aiBtn.disabled = false;
-                    aiBtn.textContent = 'ИИ-анализ';
+                    aiBtn.textContent = 'ИИ-анализ структуры';
                 };
 
                 // Добавляем кнопку после анализа
@@ -236,7 +195,7 @@ document.getElementById('uploadForm').addEventListener('submit', async (e) => {
             aiBtn.className = 'mt-3 px-3 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition block w-full font-semibold';
             aiBtn.onclick = async () => {
                 aiBtn.disabled = true;
-                aiBtn.textContent = 'Анализ...';
+                aiBtn.innerHTML = 'Анализ... <span class="spinner"></span>';
                 const file = selectedFiles.find(f => f.name === filename || f.webkitRelativePath === filename);
                 if (!file) {
                     alert('Файл не найден для ИИ-анализа');
