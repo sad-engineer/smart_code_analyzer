@@ -3,9 +3,9 @@
 # ---------------------------------------------------------------------------------------------------------------------
 import logging
 from dataclasses import asdict
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Union
 
-from code_analizer import FileBatchAnalyzer, HtmlFormatter, HtmlSummaryFormatter, LineProcessor
+from code_analizer import FileBatchAnalyzer, HtmlFormatter, HtmlSummaryFormatter, LineProcessor, SummaryData
 from fastapi import APIRouter, File, UploadFile
 
 from smart_code_analyzer.backend.ai_analyzer import AIAnalyzer

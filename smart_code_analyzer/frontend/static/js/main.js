@@ -83,10 +83,132 @@ document.getElementById('uploadForm').addEventListener('submit', async (e) => {
         const resultsDiv = document.getElementById('analysisResults');
         resultsDiv.innerHTML = '';
         
+        const fileCount = Object.keys(data).filter(key => key !== 'summary').length;
+
         for (const [filename, result] of Object.entries(data)) {
-            // Создаём раскрывающийся блок
+            // Если один файл — пропускаем summary
+            if (fileCount === 1 && filename === 'summary') continue;
+            // Если несколько файлов — пропускаем одиночный файл на этом этапе (он будет ниже)
+            if (fileCount > 1 && filename === 'summary') {
+                // Создаём summary-блок и раскрываем его
+                const details = document.createElement('details');
+                details.className = 'mb-4 bg-white rounded-lg shadow';
+                details.setAttribute('open', '');
+                // Заголовок-строка
+                const summary = document.createElement('summary');
+                summary.className = 'flex items-center justify-between px-4 py-3 cursor-pointer select-none rounded-t-lg bg-gray-100 hover:bg-gray-200';
+                summary.innerHTML = `
+                    <span class="text-lg font-semibold text-gray-800">${filename === 'summary' ? 'Общая сводка' : filename}</span>
+                    <span class="px-2 py-1 text-sm rounded ${result.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
+                        ${result.status}
+                    </span>
+                `;
+                details.appendChild(summary);
+
+                // Контент анализа
+                let analysisContent = null;
+                if (result.html) {
+                    analysisContent = document.createElement('div');
+                    analysisContent.className = 'p-4 border-t border-gray-200';
+                    analysisContent.innerHTML = result.html;
+                    details.appendChild(analysisContent);
+                }
+
+                // Кнопка ИИ-анализа (широкая)
+                const aiBtn = document.createElement('button');
+                aiBtn.textContent = 'ИИ-анализ';
+                aiBtn.className = 'mt-3 px-3 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition block w-full font-semibold';
+                aiBtn.onclick = async () => {
+                    aiBtn.disabled = true;
+                    aiBtn.textContent = 'Анализ...';
+                    const file = selectedFiles.find(f => f.name === filename || f.webkitRelativePath === filename);
+                    if (!file) {
+                        alert('Файл не найден для ИИ-анализа');
+                        aiBtn.disabled = false;
+                        aiBtn.textContent = 'ИИ-анализ';
+                        return;
+                    }
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    try {
+                        const resp = await fetch('/analyzer/ai-analyze', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        const aiData = await resp.json();
+                        let aiDiv = details.querySelector('.ai-analysis');
+                        if (!aiDiv) {
+                            aiDiv = document.createElement('div');
+                            aiDiv.className = 'ai-analysis mt-3 p-3 bg-violet-50 rounded text-sm';
+                            details.appendChild(aiDiv);
+                        }
+                        aiDiv.innerHTML = `
+                            <div class="font-bold text-violet-700 mb-2 text-lg">ИИ-анализ</div>
+                            <div class="mb-2">
+                                <span class="font-semibold text-gray-700">Стиль кода:</span>
+                                <ul class="list-disc pl-6 text-gray-800">
+                                    <li><b>Форматирование:</b> ${aiData.code_style.formatting}</li>
+                                    <li><b>Именование:</b> ${aiData.code_style.naming}</li>
+                                    <li><b>Документация:</b> ${aiData.code_style.documentation}</li>
+                                    <li><b>Структура:</b> ${aiData.code_style.structure}</li>
+                                </ul>
+                            </div>
+                            <div class="mb-2">
+                                <span class="font-semibold text-gray-700">SOLID:</span>
+                                <ul class="list-disc pl-6 text-gray-800">
+                                    <li><b>SRP:</b> ${aiData.solid_principles.SRP}</li>
+                                    <li><b>OCP:</b> ${aiData.solid_principles.OCP}</li>
+                                    <li><b>LSP:</b> ${aiData.solid_principles.LSP}</li>
+                                    <li><b>ISP:</b> ${aiData.solid_principles.ISP}</li>
+                                    <li><b>DIP:</b> ${aiData.solid_principles.DIP}</li>
+                                </ul>
+                            </div>
+                            <div class="mb-2">
+                                <span class="font-semibold text-gray-700">Потенциальные проблемы:</span>
+                                <ul class="list-disc pl-6 text-gray-800">
+                                    ${aiData.potential_issues && aiData.potential_issues.length > 0
+                                        ? aiData.potential_issues.map(issue => `
+                                            <li>
+                                                <b>${issue.type}:</b> ${issue.description}
+                                                <div class="text-gray-600 text-sm ml-2"><b>Рекомендация:</b> ${issue.recommendation}</div>
+                                            </li>
+                                        `).join('')
+                                        : '<li>Не обнаружено</li>'
+                                    }
+                                </ul>
+                            </div>
+                            <div class="mb-2">
+                                <span class="font-semibold text-gray-700">Рекомендации по улучшению:</span>
+                                <ul class="list-disc pl-6 text-gray-800">
+                                    ${aiData.recommendations && aiData.recommendations.length > 0
+                                        ? aiData.recommendations.map(rec => `<li>${rec}</li>`).join('')
+                                        : '<li>Нет рекомендаций</li>'
+                                    }
+                                </ul>
+                            </div>
+                            <div class="mt-2 font-bold text-right">
+                                <span class="text-gray-700">Общая оценка:</span>
+                                <span class="inline-block px-3 py-1 rounded bg-violet-200 text-violet-900 ml-2">${(aiData.overall_score * 100).toFixed(0)} / 100</span>
+                            </div>
+                        `;
+                    } catch (e) {
+                        alert('Ошибка ИИ-анализа');
+                    }
+                    aiBtn.disabled = false;
+                    aiBtn.textContent = 'ИИ-анализ';
+                };
+
+                // Добавляем кнопку после анализа
+                details.appendChild(aiBtn);
+
+                resultsDiv.insertBefore(details, resultsDiv.firstChild);
+                continue;
+            }
+
+            // Для одиночного файла или для каждого файла при мультизагрузке
             const details = document.createElement('details');
             details.className = 'mb-4 bg-white rounded-lg shadow';
+            if (fileCount === 1) details.setAttribute('open', ''); // раскрываем если один файл
 
             // Заголовок-строка
             const summary = document.createElement('summary');
@@ -195,13 +317,7 @@ document.getElementById('uploadForm').addEventListener('submit', async (e) => {
             // Добавляем кнопку после анализа
             details.appendChild(aiBtn);
 
-            // summary — в начало, остальные — в конец
-            if (filename === 'summary') {
-                resultsDiv.insertBefore(details, resultsDiv.firstChild);
-                details.setAttribute('open', '');
-            } else {
-                resultsDiv.appendChild(details);
-            }
+            resultsDiv.appendChild(details);
         }
     } catch (error) {
         console.error('Ошибка:', error);
