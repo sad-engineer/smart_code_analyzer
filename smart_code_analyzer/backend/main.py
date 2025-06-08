@@ -4,6 +4,7 @@
 from pathlib import Path
 from typing import List
 
+import uvicorn
 from fastapi import FastAPI, File, HTTPException, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.requests import Request
@@ -48,8 +49,12 @@ async def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 
+def start():
+    uvicorn.run("smart_code_analyzer.backend.main:app", host="127.0.0.1", port=8000, reload=True)
+
+
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+    start()
 
 
 #     poetry run uvicorn smart_code_analyzer.backend.main:app --reload --host 0.0.0.0 --port 8000

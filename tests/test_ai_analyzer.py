@@ -4,7 +4,9 @@
 import asyncio
 import os
 from pathlib import Path
+
 from smart_code_analyzer.backend.ai_analyzer import AIAnalyzer
+
 
 async def test_ai_analyzer():
     # Получаем API ключ из переменной окружения
@@ -15,7 +17,7 @@ async def test_ai_analyzer():
 
     # Создаем анализатор
     analyzer = AIAnalyzer(api_key)
-    
+
     # Тестовый код для анализа
     test_code = """
 from abc import ABC, abstractmethod
@@ -60,47 +62,48 @@ class DatabaseUserRepository(UserRepository):
     def get_all(self) -> List[UserData]:
         return list(self._users.values())
     """
-    
+
     # Создаем временный файл
     test_file = Path("test_code.py")
     try:
         with open(test_file, "w", encoding="utf-8") as f:
             f.write(test_code)
-        
+
         print("Начинаем анализ кода...")
-        
+
         # Анализируем файл
         result = await analyzer.analyze_file(test_file)
-        
+
         # Выводим результаты
         print("\n=== Результаты анализа ===")
         print(f"Файл: {result.filename}")
-        
+
         print("\n=== Анализ стиля кода ===")
         for key, value in result.code_style.items():
             print(f"{key}: {value}")
-        
+
         print("\n=== SOLID принципы ===")
         for principle, status in result.solid_principles.items():
             print(f"{principle}: {status}")
-        
+
         print("\n=== Потенциальные проблемы ===")
         for issue in result.potential_issues:
             print(f"\nТип: {issue.get('type', 'Не указан')}")
             print(f"Описание: {issue.get('description', 'Не указано')}")
             print(f"Строка: {issue.get('line', 'Не указана')}")
             print(f"Рекомендация: {issue.get('recommendation', 'Не указана')}")
-        
+
         print("\n=== Рекомендации ===")
         for i, rec in enumerate(result.recommendations, 1):
             print(f"{i}. {rec}")
-        
+
         print(f"\nОбщая оценка: {result.overall_score:.2f}")
-        
+
     finally:
         # Удаляем временный файл
         if test_file.exists():
             os.remove(test_file)
 
+
 if __name__ == "__main__":
-    asyncio.run(test_ai_analyzer()) 
+    asyncio.run(test_ai_analyzer())

@@ -4,26 +4,28 @@
 import asyncio
 import os
 from pathlib import Path
+
 from smart_code_analyzer.backend.ai_analyzer import AIAnalyzer
+
 
 async def demonstrate_analyzer():
     """Демонстрация работы анализатора кода"""
     print("Начинаем анализ кода...")
-    
+
     # Проверяем наличие API ключей
     api_key = os.getenv("OPENAI_API_KEY")
     proxy_api_key = os.getenv("PROXYAPI_KEY")
-    
+
     if not api_key:
         raise ValueError("OPENAI_API_KEY не найден. Укажите его в .env файле.")
     if not proxy_api_key:
         raise ValueError("PROXYAPI_KEY не найден. Укажите его в .env файле.")
-    
+
     # Показываем доступные модели
     print("\nДоступные модели:")
     for model, description in AIAnalyzer.AVAILABLE_MODELS.items():
         print(f"- {model}: {description}")
-    
+
     # Тестовый код для анализа
     test_code = """
     from dataclasses import dataclass
@@ -66,49 +68,48 @@ async def demonstrate_analyzer():
             user = self.repository.get_user_by_id(user_id)
             return user.get_full_info() if user else None
     """
-    
+
     # Создаем временный файл с тестовым кодом
     test_file = Path("test_code.py")
     try:
         with open(test_file, "w", encoding="utf-8") as f:
             f.write(test_code)
-        
+
         # Используем контекстный менеджер для анализатора
         async with AIAnalyzer(api_key=api_key) as analyzer:
             print(f"\nИспользуем модель: {analyzer.model}")
-            
+
             # Запускаем анализ
             result = await analyzer.analyze_file(test_file)
-            
+
             # Выводим результаты
             print("\nРезультаты анализа:")
             print(f"Файл: {result.filename}")
-            
+
             print("\nАнализ стиля кода:")
             for aspect, status in result.code_style.items():
                 print(f"- {aspect}: {status}")
-            
+
             print("\nСоответствие SOLID принципам:")
             for principle, status in result.solid_principles.items():
                 print(f"- {principle}: {status}")
-            
+
             print("\nПотенциальные проблемы:")
             for issue in result.potential_issues:
                 print(f"- {issue['type']}: {issue['description']}")
                 print(f"  Рекомендация: {issue['recommendation']}")
-            
+
             print("\nРекомендации по улучшению:")
             for rec in result.recommendations:
                 print(f"- {rec}")
-            
+
             print(f"\nОбщая оценка качества кода: {result.overall_score:.2f}")
-        
+
     finally:
         # Удаляем временный файл
         if test_file.exists():
             test_file.unlink()
 
+
 if __name__ == "__main__":
     asyncio.run(demonstrate_analyzer())
-
-

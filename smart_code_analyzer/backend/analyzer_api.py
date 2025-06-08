@@ -1,16 +1,23 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------------------------------------------------
+import logging
 from dataclasses import asdict
 from typing import Any, Dict, List
 
 from code_analizer import FileBatchAnalyzer, HtmlFormatter, HtmlSummaryFormatter, LineProcessor
-from fastapi import APIRouter, File, UploadFile, Form
-from smart_code_analyzer.backend.ai_analyzer import AIAnalyzer, AIAnalysisResult
+from fastapi import APIRouter, File, UploadFile
+
+from smart_code_analyzer.backend.ai_analyzer import AIAnalyzer
 
 router = APIRouter(prefix="/analyzer", tags=["analyzer"])
 
+# Настраиваем класс пакетного анализа списка файлов
 batch_analyzer = FileBatchAnalyzer(LineProcessor)
+
+# Настраиваем логирование
+logger = logging.getLogger("uvicorn.error")
+logger.setLevel(logging.DEBUG)
 
 
 @router.post("/analyze")
@@ -18,6 +25,7 @@ async def analyze_code(files: List[UploadFile] = File(...)):
     """
     Анализирует загруженный файл с кодом
     """
+    logger.info(f"Загружено файлов для parsing-анализа: {len(files)}")
     results_analysis = {}
     datas_list = await batch_analyzer.analyze_files(files)
     summary_data = batch_analyzer.get_summary()
@@ -40,6 +48,11 @@ async def analyze_code(files: List[UploadFile] = File(...)):
         "html": summary_formatter.format(summary_data),
     }
 
+    # Сохраняем результаты для последующего ИИ-анализа
+    global RESULTS_CACHE
+    RESULTS_CACHE = results_analysis
+
+    logger.info(f"Parsing-анализ завершен")
     return results_analysis
 
 
@@ -56,22 +69,24 @@ async def ai_analyze_code(file: UploadFile = File(...)):
     """
     Анализирует файл с помощью ИИ
     """
-    import tempfile
-    from pathlib import Path
+    filename = file.filename
+    logger.info(f"ИИ-анализ для файла: {filename}")
 
-    # Сохраняем файл во временную папку
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".py") as tmp:
-        tmp.write(await file.read())
-        tmp_path = Path(tmp.name)
+    code = RESULTS_CACHE[filename]['data']['file_content']
+
+    if not code:
+        logger.error(f"Код для файла {filename} не найден")
+        return {"error": "Код не найден"}
 
     async with AIAnalyzer() as analyzer:
-        result: AIAnalysisResult = await analyzer.analyze_file(tmp_path)
-
-    # Удаляем временный файл
-    tmp_path.unlink(missing_ok=True)
+        result = await analyzer.analyze_code_text(code, filename=filename)
+        if result:
+            logger.info(f"ИИ-анализ файла {filename} завершен")
+        else:
+            logger.info(f"ИИ-анализ файла {filename} завершен с ошибкой")
 
     return {
-        "filename": result.filename,
+        "filename": filename,
         "code_style": result.code_style,
         "solid_principles": result.solid_principles,
         "potential_issues": result.potential_issues,
