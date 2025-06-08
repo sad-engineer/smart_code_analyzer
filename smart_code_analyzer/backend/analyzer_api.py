@@ -5,7 +5,8 @@ from dataclasses import asdict
 from typing import Any, Dict, List
 
 from code_analizer import FileBatchAnalyzer, HtmlFormatter, HtmlSummaryFormatter, LineProcessor
-from fastapi import APIRouter, File, UploadFile
+from fastapi import APIRouter, File, UploadFile, Form
+from smart_code_analyzer.backend.ai_analyzer import AIAnalyzer, AIAnalysisResult
 
 router = APIRouter(prefix="/analyzer", tags=["analyzer"])
 
@@ -48,3 +49,32 @@ async def get_analysis_status(analysis_id: str) -> Dict[str, Any]:
     Получает статус анализа по ID
     """
     return {"analysis_id": analysis_id, "status": "pending", "message": "Статус анализа будет реализован"}
+
+
+@router.post("/ai-analyze")
+async def ai_analyze_code(file: UploadFile = File(...)):
+    """
+    Анализирует файл с помощью ИИ
+    """
+    import tempfile
+    from pathlib import Path
+
+    # Сохраняем файл во временную папку
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".py") as tmp:
+        tmp.write(await file.read())
+        tmp_path = Path(tmp.name)
+
+    async with AIAnalyzer() as analyzer:
+        result: AIAnalysisResult = await analyzer.analyze_file(tmp_path)
+
+    # Удаляем временный файл
+    tmp_path.unlink(missing_ok=True)
+
+    return {
+        "filename": result.filename,
+        "code_style": result.code_style,
+        "solid_principles": result.solid_principles,
+        "potential_issues": result.potential_issues,
+        "recommendations": result.recommendations,
+        "overall_score": result.overall_score,
+    }
