@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "smart-code-analyzer"
-version = "0.0.07"
+version = "0.0.08"
 description = "Умный анализатор кода"
 authors = ["Andrey Korenyk <korenyuk.a.n@mail.ru>"]
 readme = "README.md"
@@ -11,6 +11,10 @@ python = "^3.9"
 fastapi = "^0.109.0"
 code-analizer = {git = "https://github.com/sad-engineer/code_analizer.git"}
 openai = "^1.84.0"
+uvicorn = "^0.34.3"
+dotenv = "^0.9.9"
+python-multipart = "^0.0.20"
+jinja2 = "^3.1.6"
 
 
 [tool.poetry.group.dev.dependencies]

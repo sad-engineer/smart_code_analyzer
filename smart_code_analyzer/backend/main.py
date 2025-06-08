@@ -49,7 +49,12 @@ async def read_root(request: Request):
 
 
 def start():
-    uvicorn.run("smart_code_analyzer.backend.main:app", host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run(
+        "smart_code_analyzer.backend.main:app",
+        host="127.0.0.1",
+        port=8000,
+        reload=True
+    )
 
 
 if __name__ == "__main__":

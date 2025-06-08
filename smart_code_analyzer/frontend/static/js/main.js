@@ -317,7 +317,7 @@ document.getElementById('uploadForm').addEventListener('submit', async (e) => {
             // Добавляем кнопку после анализа
             details.appendChild(aiBtn);
 
-            resultsDiv.appendChild(details);
+                resultsDiv.appendChild(details);
         }
     } catch (error) {
         console.error('Ошибка:', error);
