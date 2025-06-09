@@ -13,6 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import ValidationError
 from pydantic_settings import BaseSettings
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from smart_code_analyzer.backend.analyzer_api import router as analyzer_router
 from smart_code_analyzer.backend.models import ErrorResponse
@@ -28,7 +29,7 @@ app = FastAPI(
     - Проверка стиля, SOLID, поиск проблем
     - ИИ-анализ структуры проекта
     """,
-    version="0.0.11",
+    version="0.0.12",
 )
 
 
@@ -72,6 +73,9 @@ templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 # Подключаем роутеры
 app.include_router(analyzer_router)
 
+# Интеграция Prometheus для метрик
+Instrumentator().instrument(app).expose(app)
+
 
 @app.exception_handler(ValidationError)
 async def validation_exception_handler(request: Request, exc: ValidationError):
@@ -104,9 +108,11 @@ if __name__ == "__main__":
 
 #     poetry run uvicorn smart_code_analyzer.backend.main:app --reload --host 0.0.0.0 --port 8000
 #       http://localhost:8000
+#       http://localhost:8000/docs
+#       http://localhost:8000/redoc
+#       http://localhost:8000/metrics
+
 # ENVIRONMENT=production
 # ALLOWED_ORIGINS=["https://your-production-domain.com"]
-# Добавить более детальную документацию API
 # Добавить тесты
-# Реализовать систему кэширования результатов анализа
 # Добавить мониторинг и метрики
