@@ -29,7 +29,7 @@ app = FastAPI(
     - Проверка стиля, SOLID, поиск проблем
     - ИИ-анализ структуры проекта
     """,
-    version="0.0.12",
+    version="0.0.11",
 )
 
 
@@ -116,3 +116,4 @@ if __name__ == "__main__":
 # ALLOWED_ORIGINS=["https://your-production-domain.com"]
 # Добавить тесты
 # Добавить мониторинг и метрики
+# Добавьте Prometheus и (по желанию) Grafana для визуализации.
