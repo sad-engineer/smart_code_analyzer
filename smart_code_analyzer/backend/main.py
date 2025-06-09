@@ -11,18 +11,32 @@ from fastapi.requests import Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from pydantic_settings import BaseSettings
 from pydantic import ValidationError
+from pydantic_settings import BaseSettings
 
 from smart_code_analyzer.backend.analyzer_api import router as analyzer_router
 from smart_code_analyzer.backend.models import ErrorResponse
 
-app = FastAPI(title="Smart Code Analyzer", description="API для умного анализа кода", version="0.0.10")
+app = FastAPI(
+    title="Smart Code Analyzer",
+    description="""
+    Smart Code Analyzer — сервис для анализа исходного кода и архитектуры проектов с помощью статических методов и 
+    искусственного интеллекта.
+
+    **Возможности:**
+    - Анализ отдельных файлов и целых пакетов
+    - Проверка стиля, SOLID, поиск проблем
+    - ИИ-анализ структуры проекта
+    """,
+    version="0.0.11",
+)
 
 
 class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
-    ALLOWED_ORIGINS: List[str] = ["http://localhost:3000", ]
+    ALLOWED_ORIGINS: List[str] = [
+        "http://localhost:3000",
+    ]
     ALLOWED_METHODS: List[str] = ["GET", "POST"]
     ALLOWED_HEADERS: List[str] = ["Content-Type", "Authorization"]
 
@@ -63,11 +77,7 @@ app.include_router(analyzer_router)
 async def validation_exception_handler(request: Request, exc: ValidationError):
     """Обработчик ошибок валидации Pydantic"""
     return JSONResponse(
-        status_code=422,
-        content=ErrorResponse(
-            error="Ошибка валидации данных",
-            details={"errors": exc.errors()}
-        ).dict()
+        status_code=422, content=ErrorResponse(error="Ошибка валидации данных", details={"errors": exc.errors()}).dict()
     )
 
 
@@ -75,11 +85,7 @@ async def validation_exception_handler(request: Request, exc: ValidationError):
 async def general_exception_handler(request: Request, exc: Exception):
     """Общий обработчик ошибок"""
     return JSONResponse(
-        status_code=500,
-        content=ErrorResponse(
-            error="Внутренняя ошибка сервера",
-            details={"message": str(exc)}
-        ).dict()
+        status_code=500, content=ErrorResponse(error="Внутренняя ошибка сервера", details={"message": str(exc)}).dict()
     )
 
 
@@ -102,6 +108,5 @@ if __name__ == "__main__":
 # ALLOWED_ORIGINS=["https://your-production-domain.com"]
 # Добавить более детальную документацию API
 # Добавить тесты
-# Добавить валидацию входных данных
 # Реализовать систему кэширования результатов анализа
 # Добавить мониторинг и метрики

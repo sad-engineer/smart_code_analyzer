@@ -4,30 +4,19 @@
 import json
 import logging
 import os
-from dataclasses import dataclass
 from typing import Dict, List, Optional
 
 import httpx
 from dotenv import load_dotenv
 from openai import AsyncOpenAI
 
+from smart_code_analyzer.backend.models import AIAnalysisResult
+
 # Настраиваем логирование
 logger = logging.getLogger("uvicorn.error")
 logger.setLevel(logging.DEBUG)
 # Загружаем переменные окружения из .env файла
 load_dotenv()
-
-
-@dataclass
-class AIAnalysisResult:
-    """Результат анализа кода с помощью ИИ"""
-
-    filename: str
-    code_style: Dict[str, str]  # Анализ стиля кода
-    solid_principles: Dict[str, str]  # Соответствие принципам SOLID
-    potential_issues: List[Dict[str, str]]  # Потенциальные проблемы
-    recommendations: List[str]  # Рекомендации по улучшению
-    overall_score: float  # Общая оценка качества кода
 
 
 class AIAnalyzer:
