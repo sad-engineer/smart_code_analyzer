@@ -124,9 +124,7 @@ document.getElementById('uploadForm').addEventListener('submit', async (e) => {
 
                     // Собираем все файлы для анализа пакета
                     // selectedFiles — это массив File, нужно получить их содержимое
-                    const filesForPackage = selectedFiles.map(f => ({
-                        filename: f.webkitRelativePath || f.name
-                    }));
+                    const filesForPackage = await getFilesWithContent(selectedFiles);
 
                     try {
                         const resp = await fetch('/analyzer/ai-analyze-package', {
@@ -370,4 +368,18 @@ function readAllFilesFromDirectory(directoryEntry) {
         }
         readEntries();
     });
+}
+
+async function getFilesWithContent(files) {
+    const readFile = file =>
+        new Promise(resolve => {
+            const reader = new FileReader();
+            reader.onload = e => resolve({
+                filename: file.name,
+                content: e.target.result,
+                relative_path: file.webkitRelativePath || file.name
+            });
+            reader.readAsText(file);
+        });
+    return Promise.all(files.map(readFile));
 } 
