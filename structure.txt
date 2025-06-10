@@ -1,0 +1,113 @@
+smart_code_analyzer
+└---backend
+    └---ai_analyzer.py
+        └---class: AIAnalyzer:
+            └---function: __init__
+            └---function: _parse_style_analysis
+            └---function: _parse_solid_analysis
+            └---function: _parse_issues
+            └---function: _parse_recommendations
+            └---function: _calculate_overall_score
+            └---function: _clean_json_markdown
+    └---analyzer_api.py
+    └---Dockerfile.backend
+    └---main.py
+        └---class: Settings
+        └---class: Config:
+        └---function: start
+    └---models.py
+        └---class: FileContent
+            └---function: validate_filename
+        └---class: PackageAnalysisRequest
+            └---function: validate_unique_paths
+        └---class: AnalysisResponse
+        └---class: AIAnalysisResponse
+        └---class: ErrorResponse
+        └---class: AIAnalysisResult
+    └---__init__.py
+└---frontend
+    └---src
+        └---App.tsx
+        └---input.css
+    └---static
+        └---js
+            └---main.js
+    └---templates
+        └---index.html
+    └---Dockerfile.frontend
+    └---package.json
+    └---tailwind.config.js
+└---.env
+    └---class: AIAnalyzer:
+        └---function: __init__
+        └---function: _parse_style_analysis
+        └---function: _parse_solid_analysis
+        └---function: _parse_issues
+        └---function: _parse_recommendations
+        └---function: _calculate_overall_score
+        └---function: _clean_json_markdown
+    └---class: Settings
+    └---class: Config:
+    └---function: start
+    └---class: FileContent
+        └---function: validate_filename
+    └---class: PackageAnalysisRequest
+        └---function: validate_unique_paths
+    └---class: AnalysisResponse
+    └---class: AIAnalysisResponse
+    └---class: ErrorResponse
+    └---class: AIAnalysisResult
+tests
+└---test_ai_analyzer.py
+    └---class: UserData:
+    └---class: UserRepository
+        └---function: save
+        └---function: get_by_id
+        └---function: get_all
+    └---class: DatabaseUserRepository
+        └---function: __init__
+        └---function: save
+        └---function: get_by_id
+        └---function: get_all
+└---test_main.py
+    └---class: User:
+        └---function: get_full_info
+    └---class: UserRepository:
+        └---function: __init__
+        └---function: add_user
+        └---function: get_user_by_id
+        └---function: get_active_users
+    └---class: UserService:
+        └---function: __init__
+        └---function: create_user
+        └---function: get_user_info
+docker-compose.yml
+└---function: name_write
+└---function: create_file
+prometheus.yml
+README.md
+run.py
+└---function: start_prometheus
+└---function: start_grafana
+start.bat
+└---class: UserData:
+└---class: UserRepository
+    └---function: save
+    └---function: get_by_id
+    └---function: get_all
+└---class: DatabaseUserRepository
+    └---function: __init__
+    └---function: save
+    └---function: get_by_id
+    └---function: get_all
+└---class: User:
+    └---function: get_full_info
+└---class: UserRepository:
+    └---function: __init__
+    └---function: add_user
+    └---function: get_user_by_id
+    └---function: get_active_users
+└---class: UserService:
+    └---function: __init__
+    └---function: create_user
+    └---function: get_user_info

@@ -11,9 +11,9 @@ from fastapi.requests import Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from prometheus_fastapi_instrumentator import Instrumentator
 from pydantic import ValidationError
 from pydantic_settings import BaseSettings
-from prometheus_fastapi_instrumentator import Instrumentator
 
 from smart_code_analyzer.backend.analyzer_api import router as analyzer_router
 from smart_code_analyzer.backend.models import ErrorResponse
@@ -29,7 +29,7 @@ app = FastAPI(
     - Проверка стиля, SOLID, поиск проблем
     - ИИ-анализ структуры проекта
     """,
-    version="0.0.11",
+    version="0.0.13",
 )
 
 
