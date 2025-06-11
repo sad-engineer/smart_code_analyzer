@@ -111,7 +111,7 @@ colorama = {version = "*", markers = "platform_system == \"Windows\""}
 
 [[package]]
 name = "code-analizer"
-version = "0.0.21"
+version = "0.0.23"
 description = "Пакет Python для анализа кода проекта"
 optional = false
 python-versions = "^3.9"
@@ -127,7 +127,7 @@ pyyaml = "^6.0.2"
 type = "git"
 url = "https://github.com/sad-engineer/code_analizer.git"
 reference = "HEAD"
-resolved_reference = "d449d23298b139f9308b90590ab7f974150a03d7"
+resolved_reference = "5f381cbfca406cac15cff7e8b983264145290393"
 
 [[package]]
 name = "colorama"
@@ -581,14 +581,14 @@ files = [
 
 [[package]]
 name = "openai"
-version = "1.84.0"
+version = "1.86.0"
 description = "The official Python library for the openai API"
 optional = false
 python-versions = ">=3.8"
 groups = ["main"]
 files = [
-    {file = "openai-1.84.0-py3-none-any.whl", hash = "sha256:7ec4436c3c933d68dc0f5a0cef0cb3dbc0864a54d62bddaf2ed5f3d521844711"},
-    {file = "openai-1.84.0.tar.gz", hash = "sha256:4caa43bdab262cc75680ce1a2322cfc01626204074f7e8d9939ab372acf61698"},
+    {file = "openai-1.86.0-py3-none-any.whl", hash = "sha256:c8889c39410621fe955c230cc4c21bfe36ec887f4e60a957de05f507d7e1f349"},
+    {file = "openai-1.86.0.tar.gz", hash = "sha256:c64d5b788359a8fdf69bd605ae804ce41c1ce2e78b8dd93e2542e0ee267f1e4b"},
 ]
 
 [package.dependencies]
