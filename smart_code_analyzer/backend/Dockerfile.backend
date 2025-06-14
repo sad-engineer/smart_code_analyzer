@@ -1,19 +1,32 @@
-FROM python:3.9-slim
+# Используем официальный образ Python на Alpine Linux
+FROM python:3.9.18-alpine3.18
 
+# Устанавливаем рабочую директорию
 WORKDIR /app
 
-# Установка Poetry
+# Устанавливаем необходимые системные пакеты
+RUN apk add --no-cache gcc musl-dev linux-headers
+
+# Устанавливаем Poetry
 RUN pip install poetry
 
-# Копирование файлов конфигурации
+# Копируем только файлы зависимостей
 COPY pyproject.toml poetry.lock ./
 
-# Установка зависимостей
-RUN poetry config virtualenvs.create false \
-    && poetry install --no-dev --no-interaction --no-ansi
+# Настраиваем Poetry
+RUN poetry config virtualenvs.create false
 
-# Копирование исходного кода
-COPY . .
+# Устанавливаем только зависимости
+RUN poetry install --no-interaction --no-ansi --no-root
 
-# Запуск приложения
+# Устанавливаем переменные окружения
+ENV OPENAI_API_KEY=""
+ENV PROXYAPI_KEY=""
+ENV AI_MODEL="gpt-3.5-turbo"
+ENV PYTHONPATH=/app
+
+# Открываем порт
+EXPOSE 8000
+
+# Запускаем приложение
 CMD ["poetry", "run", "uvicorn", "smart_code_analyzer.backend.main:app", "--host", "0.0.0.0", "--port", "8000"] 

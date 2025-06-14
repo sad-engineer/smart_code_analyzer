@@ -1,3 +1,17 @@
+docs
+└---images
+    └---1.png
+    └---10.png
+    └---2.png
+    └---3.png
+    └---4.png
+    └---5.png
+    └---6.png
+    └---7.png
+    └---8.png
+    └---9.png
+settings
+└---code_analyzer.yaml
 smart_code_analyzer
 └---backend
     └---ai_analyzer.py
@@ -26,7 +40,9 @@ smart_code_analyzer
         └---class: AIAnalysisResult
     └---__init__.py
 └---frontend
+    └---node_modules
     └---src
+        └---components
         └---App.tsx
         └---input.css
     └---static
@@ -37,7 +53,7 @@ smart_code_analyzer
     └---Dockerfile.frontend
     └---package.json
     └---tailwind.config.js
-└---.env
+└---__init__.py
     └---class: AIAnalyzer:
         └---function: __init__
         └---function: _parse_style_analysis
@@ -81,6 +97,7 @@ tests
         └---function: __init__
         └---function: create_user
         └---function: get_user_info
+.env
 docker-compose.yml
 └---function: name_write
 └---function: create_file
@@ -89,7 +106,6 @@ README.md
 run.py
 └---function: start_prometheus
 └---function: start_grafana
-start.bat
 └---class: UserData:
 └---class: UserRepository
     └---function: save

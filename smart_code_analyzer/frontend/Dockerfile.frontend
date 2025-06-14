@@ -1,15 +1,29 @@
-FROM node:18-alpine
+# Используем официальный образ Node.js для сборки
+FROM node:18-alpine as builder
 
+# Устанавливаем рабочую директорию
 WORKDIR /app
 
-# Копирование файлов конфигурации
+# Копируем файлы package.json
 COPY package*.json ./
 
-# Установка зависимостей
+# Устанавливаем зависимости
 RUN npm install
 
-# Копирование исходного кода
+# Копируем исходный код
 COPY . .
 
-# Запуск приложения
-CMD ["npm", "start"] 
+# Собираем CSS
+RUN npm run build
+
+# Используем nginx для раздачи статических файлов
+FROM nginx:alpine
+
+# Копируем собранные файлы из builder
+COPY --from=builder /app/templates /usr/share/nginx/html
+COPY --from=builder /app/static /usr/share/nginx/html/static
+
+# Открываем порт
+EXPOSE 80
+
+# Nginx запускается автоматически 

@@ -40,9 +40,13 @@ class Settings(BaseSettings):
     ]
     ALLOWED_METHODS: List[str] = ["GET", "POST"]
     ALLOWED_HEADERS: List[str] = ["Content-Type", "Authorization"]
+    OPENAI_API_KEY: str
+    PROXYAPI_KEY: str
+    AI_MODEL: str = "gpt-3.5-turbo"
 
     class Config:
         env_file = ".env"
+        case_sensitive = True
 
 
 settings = Settings()
@@ -105,15 +109,3 @@ def start():
 
 if __name__ == "__main__":
     start()
-
-#     poetry run uvicorn smart_code_analyzer.backend.main:app --reload --host 0.0.0.0 --port 8000
-#       http://localhost:8000
-#       http://localhost:8000/docs
-#       http://localhost:8000/redoc
-#       http://localhost:8000/metrics
-
-# ENVIRONMENT=production
-# ALLOWED_ORIGINS=["https://your-production-domain.com"]
-# Добавить тесты
-# Добавить мониторинг и метрики
-# Добавьте Prometheus и (по желанию) Grafana для визуализации.

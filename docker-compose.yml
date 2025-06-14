@@ -2,40 +2,30 @@ version: '3.8'
 
 services:
   backend:
-    build: 
+    build:
       context: .
       dockerfile: smart_code_analyzer/backend/Dockerfile.backend
     ports:
       - "8000:8000"
     volumes:
-      - .:/app
+      - ./:/app
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/smart_code_analyzer
-    depends_on:
-      - db
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - PROXYAPI_KEY=${PROXYAPI_KEY}
+      - AI_MODEL=${AI_MODEL}
+    command: uvicorn smart_code_analyzer.backend.main:app --host 0.0.0.0 --port 8000 --reload
 
   frontend:
     build:
-      context: ./frontend
-      dockerfile: smart_code_analyzer/frontend/Dockerfile.frontend
+      context: ./smart_code_analyzer/frontend
+      dockerfile: Dockerfile.frontend
     ports:
       - "3000:3000"
     volumes:
-      - ./frontend:/app
+      - ./smart_code_analyzer/frontend:/app
       - /app/node_modules
     depends_on:
       - backend
-
-  db:
-    image: postgres:15
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=smart_code_analyzer
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
 
   prometheus:
     image: prom/prometheus
@@ -43,11 +33,17 @@ services:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
       - "9090:9090"
+    depends_on:
+      - backend
 
   grafana:
     image: grafana/grafana
     ports:
-      - "3000:3000"
+      - "3001:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
 
 volumes:
-  postgres_data:
+  grafana_data:

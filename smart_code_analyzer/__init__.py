@@ -2,7 +2,9 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------------------------------------------------
 """
-Smart Code Analyzer backend package.
+Smart Code Analyzer package.
 """
 
-from .main import app
+from smart_code_analyzer.version import get_version
+
+__version__ = get_version()

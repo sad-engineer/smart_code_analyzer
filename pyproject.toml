@@ -1,12 +1,15 @@
 [tool.poetry]
 name = "smart-code-analyzer"
-version = "0.0.13"
+version = "0.0.15"
 description = "Умный анализатор кода"
 authors = ["Andrey Korenyk <korenyuk.a.n@mail.ru>"]
 readme = "README.md"
-packages = [{include = "smart_code_analyzer"}]
+packages = [
+    {include = "smart_code_analyzer", from = "."}
+]
 
 [tool.poetry.dependencies]
+tomli = "^2.0.1"
 python = "^3.9"
 fastapi = "^0.109.0"
 code-analizer = {git = "https://github.com/sad-engineer/code_analizer.git"}
