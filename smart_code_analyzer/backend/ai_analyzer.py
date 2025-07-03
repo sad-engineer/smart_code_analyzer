@@ -18,6 +18,8 @@ logger.setLevel(logging.DEBUG)
 # Загружаем переменные окружения из .env файла
 load_dotenv()
 
+DEFAULT_TEMPERATURE = 0.3
+
 
 class AIAnalyzer:
     """Класс для анализа кода с помощью ИИ"""
@@ -41,19 +43,48 @@ class AIAnalyzer:
         """
         self.api_key = api_key or os.getenv("OPENAI_API_KEY")
         if not self.api_key:
-            raise ValueError("API ключ не найден. Укажите его в .env файле или передайте в конструктор.")
+            message = "API ключ не найден. Укажите его в .env файле или передайте в конструктор."
+            logger.error(message)
+            raise ValueError(message)
 
         # Получаем модель из параметра или .env
         self.model = model or os.getenv("AI_MODEL", "gpt-4.1")
 
         # Проверяем корректность модели
         if self.model not in self.AVAILABLE_MODELS:
-            raise ValueError(f"Неподдерживаемая модель. Доступные модели: {', '.join(self.AVAILABLE_MODELS.keys())}")
+            message = f"Неподдерживаемая модель. Доступные модели: {', '.join(self.AVAILABLE_MODELS.keys())}"
+            logger.error(message)
+            raise ValueError(message)
+        else:
+            logger.info(f"Используемая модель: {self.model}")
+
+        # Получаем temperature из .env или используем значение по умолчанию
+        temperature_str = os.getenv("AI_TEMPERATURE")
+        if not temperature_str:
+            message = "AI_TEMPERATURE не найден. Укажите его в .env файле. Используется значение по умолчанию 0.3"
+            logger.warning(message)
+            self.temperature = DEFAULT_TEMPERATURE
+        else:
+            try:
+                self.temperature = float(temperature_str)
+                if not 0.0 <= self.temperature <= 2.0:
+                    message = "Temperature должен быть в диапазоне от 0.0 до 2.0"
+                    logger.error(message)
+                    raise ValueError(message)
+            except ValueError as e:
+                message = (
+                    f"Некорректное значение AI_TEMPERATURE: {temperature_str}. Используется значение по умолчанию 0.3"
+                )
+                logger.warning(message)
+                self.temperature = DEFAULT_TEMPERATURE
+        logger.info(f"Используемая температура: {self.temperature}")
 
         # Получаем ключ ProxyAPI
         proxy_api_key = os.getenv("PROXYAPI_KEY")
         if not proxy_api_key:
-            raise ValueError("PROXYAPI_KEY не найден. Укажите его в .env файле.")
+            message = "PROXYAPI_KEY не найден. Укажите его в .env файле."
+            logger.error(message)
+            raise ValueError(message)
 
         # Настройка HTTP клиента
         transport = httpx.AsyncHTTPTransport(
@@ -175,7 +206,7 @@ class AIAnalyzer:
                     },
                     {"role": "user", "content": prompt},
                 ],
-                temperature=0.7,
+                temperature=self.temperature,
                 max_tokens=1000,
             )
             return response.choices[0].message.content
